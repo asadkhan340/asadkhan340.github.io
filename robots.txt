@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://asadkhan340.github.io/sitemap.xml
