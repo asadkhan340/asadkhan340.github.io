@@ -9,6 +9,7 @@
 <meta name="author" content="Asad Khan" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://asadkhan340.github.io/" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cellipse cx='20' cy='20' rx='17' ry='6.4' fill='none' stroke='%2300f0ff' stroke-width='2.4' opacity='0.85'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%23050510'/%3E%3Ccircle cx='20' cy='20' r='9' fill='none' stroke='%237b2dff' stroke-width='1'/%3E%3C/svg%3E">
 
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Asad Khan — React Native & Full Stack Developer" />
@@ -204,7 +205,19 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible{
 .nav-inner{ max-width:var(--container); margin:0 auto; padding:14px var(--gutter); display:flex; align-items:center; justify-content:space-between; gap:24px; }
 
 .brand{ display:flex; align-items:center; gap:12px; font-family:'Orbitron',sans-serif; font-weight:700; font-size:15px; letter-spacing:1.5px; text-transform:uppercase; }
-.brand svg{ width:34px; height:34px; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(0,240,255,0.3)); }
+.brand svg{ width:34px; height:34px; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(0,240,255,0.3)); overflow:visible; }
+
+/* ===================== BLACK HOLE LOGO ===================== */
+.bh-core{ transition:filter var(--med) var(--ease); }
+.bh-ring{ transform-box:fill-box; transform-origin:50% 50%; transition:filter var(--med) var(--ease); }
+.bh-ring-back{ animation:bhSpinBack 14s linear infinite; }
+.bh-ring-front{ animation:bhSpinFront 7s linear infinite; }
+@keyframes bhSpinBack{ from{ transform:rotate(-18deg); } to{ transform:rotate(342deg); } }
+@keyframes bhSpinFront{ from{ transform:rotate(-18deg); } to{ transform:rotate(-378deg); } }
+.brand:hover .bh-ring-front, .brand:focus-visible .bh-ring-front{ animation-duration:2.2s; }
+.brand:hover .bh-core, .brand:focus-visible .bh-core{ filter:drop-shadow(0 0 5px rgba(0,240,255,0.5)); }
+.brand.bh-touched .bh-ring{ filter:drop-shadow(0 0 6px rgba(0,240,255,0.5)); }
+@media (prefers-reduced-motion: reduce){ .bh-ring-back, .bh-ring-front{ animation:none; } }
 
 .nav-links{ display:flex; gap:8px; list-style:none; }
 .nav-links a{
@@ -628,8 +641,25 @@ footer{ text-align:center; padding:36px 0 50px; color:var(--muted-2); font-size:
 <!-- ===================== NAV ===================== -->
 <nav class="navbar" id="navbar">
   <div class="nav-inner">
-    <a href="#top" class="brand">
-      <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="url(#navGrad)" stroke-width="1.2" opacity="0.4"/><circle cx="20" cy="20" r="12" stroke="url(#navGrad)" stroke-width="1" opacity="0.3"/><circle cx="20" cy="20" r="4" fill="url(#navGrad)" filter="drop-shadow(0 0 4px rgba(0,240,255,0.4))"/><circle cx="32" cy="14" r="2.5" fill="#a855f7" filter="drop-shadow(0 0 4px rgba(168,85,247,0.4))"/><defs><linearGradient id="navGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00f0ff"/><stop offset="100%" stop-color="#7b2dff"/></linearGradient></defs></svg>
+    <a href="#top" class="brand" id="brandLogo">
+      <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <defs>
+          <radialGradient id="bhCoreGrad" cx="35%" cy="32%" r="70%">
+            <stop offset="0%" stop-color="#0c0c22"/>
+            <stop offset="65%" stop-color="#050510"/>
+            <stop offset="100%" stop-color="#000004"/>
+          </radialGradient>
+          <linearGradient id="bhDiskGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00f0ff"/>
+            <stop offset="45%" stop-color="#ffe9c7"/>
+            <stop offset="75%" stop-color="#ff7de3"/>
+            <stop offset="100%" stop-color="#7b2dff"/>
+          </linearGradient>
+        </defs>
+        <ellipse class="bh-ring bh-ring-back" cx="20" cy="20" rx="17" ry="6.2" fill="none" stroke="url(#bhDiskGrad)" stroke-width="1.3" opacity="0.5" transform="rotate(-18 20 20)"/>
+        <circle class="bh-core" cx="20" cy="20" r="8.5" fill="url(#bhCoreGrad)" stroke="rgba(0,240,255,0.22)" stroke-width="0.6"/>
+        <ellipse class="bh-ring bh-ring-front" cx="20" cy="20" rx="17" ry="6.2" fill="none" stroke="url(#bhDiskGrad)" stroke-width="2" stroke-linecap="round" stroke-dasharray="20 88" transform="rotate(-18 20 20)"/>
+      </svg>
       Asad Khan
     </a>
     <ul class="nav-links" id="navLinks">
@@ -1106,62 +1136,296 @@ footer{ text-align:center; padding:36px 0 50px; color:var(--muted-2); font-size:
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var canHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
 
-  /* ---------- Lightweight Canvas Starfield ---------- */
-  (function initStarfield(){
+  /* ---------- Cosmos Engine: starfield + planets + touch interaction ---------- */
+  (function initCosmos(){
     var canvas = document.getElementById('starfield');
     if(!canvas) return;
     var ctx = canvas.getContext('2d');
-    var stars = [];
-    var maxStars = reduceMotion ? 80 : 180;
-    var width, height;
 
+    /* ---- Adaptive quality tier ---- */
+    var isMobileWidth = window.innerWidth < 760;
+    var cores = navigator.hardwareConcurrency || 4;
+    var mem = navigator.deviceMemory || 4;
+    var saveData = !!(navigator.connection && navigator.connection.saveData);
+    var quality;
+    if(saveData || (isMobileWidth && (cores <= 4 || mem <= 3))) quality = 'low';
+    else if(isMobileWidth || cores <= 4) quality = 'medium';
+    else quality = 'high';
+    document.documentElement.setAttribute('data-quality', quality);
+
+    var CFG = {
+      low:    { stars:[26,16,8],  dust:0,  planets:2, moons:false, dpr:1 },
+      medium: { stars:[55,32,16], dust:12, planets:3, moons:true,  dpr:Math.min(1.5, window.devicePixelRatio||1) },
+      high:   { stars:[95,55,28], dust:34, planets:5, moons:true,  dpr:Math.min(2, window.devicePixelRatio||1) }
+    }[quality];
+
+    var width, height, dpr = CFG.dpr;
     function resize(){
       width = window.innerWidth;
       height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = Math.round(width*dpr);
+      canvas.height = Math.round(height*dpr);
+      canvas.style.width = width+'px';
+      canvas.style.height = height+'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      docHeight = document.documentElement.scrollHeight;
     }
+
+    /* ---- Starfield: 3 parallax depth layers, viewport-space, always visible ---- */
+    var layers = [];
+    CFG.stars.forEach(function(count, li){
+      var layer = { depth: (li+1)/3, stars:[] };
+      for(var i=0;i<count;i++){
+        layer.stars.push({
+          x: Math.random(), y: Math.random(),
+          r: 0.4 + li*0.45 + Math.random()*0.6,
+          baseAlpha: 0.25 + Math.random()*0.6,
+          phase: Math.random()*Math.PI*2,
+          twinkleSpeed: 0.5 + Math.random()*0.9
+        });
+      }
+      layers.push(layer);
+    });
+
+    /* ---- Faint cosmic dust ---- */
+    var dust = [];
+    for(var d=0; d<CFG.dust; d++){
+      dust.push({ x:Math.random(), y:Math.random(), r:6+Math.random()*14, a:0.02+Math.random()*0.03 });
+    }
+
+    /* ---- Realistic planets distributed across full document, world-space ---- */
+    var palettes = [
+      { base:'#6b4f8a', shade:'#241633', rim:'rgba(168,133,255,0.35)' },   // violet rock
+      { base:'#3d7a8c', shade:'#0e2530', rim:'rgba(0,240,255,0.3)' },      // teal gas
+      { base:'#8a6a4f', shade:'#2c1e14', rim:'rgba(255,180,120,0.28)' },   // amber rock
+      { base:'#4f5c8a', shade:'#161a33', rim:'rgba(120,150,255,0.3)' },    // blue gas
+      { base:'#7a4f6f', shade:'#28131f', rim:'rgba(255,120,220,0.25)' }    // magenta rock
+    ];
+    var docHeight = document.documentElement.scrollHeight;
+    var planets = [];
+    (function buildPlanets(){
+      var n = CFG.planets;
+      for(var i=0;i<n;i++){
+        var depthFactor = 0.35 + (i/(n-1||1))*0.65; // 0=far,1=near
+        var pal = palettes[i % palettes.length];
+        var p = {
+          xFrac: 0.06 + Math.random()*0.2 + (i%2===0 ? 0 : 0.62),
+          yFrac: (i+0.5)/n + (Math.random()*0.08-0.04),
+          baseR: (14 + depthFactor*30) * (0.85+Math.random()*0.3),
+          depth: depthFactor,
+          rot: Math.random()*Math.PI*2,
+          rotSpeed: 0.00006 + (1-depthFactor)*0.00002,
+          orbitR: 6 + depthFactor*10,
+          orbitSpeed: 0.00012 + Math.random()*0.00008,
+          orbitPhase: Math.random()*Math.PI*2,
+          pal: pal,
+          moons: (CFG.moons && Math.random() > 0.35) ? [{
+            dist: 22 + depthFactor*16, speed: 0.0009+Math.random()*0.0006, phase: Math.random()*Math.PI*2, r: 2+Math.random()*1.6
+          }] : []
+        };
+        planets.push(p);
+      }
+    })();
+
+    /* ---- Touch / click interaction ripples ---- */
+    var ripples = [];
+    function spawnRipple(x, y){
+      if(ripples.length > 5) ripples.shift();
+      var particles = [];
+      if(!reduceMotion){
+        var pc = quality === 'low' ? 4 : 7;
+        for(var i=0;i<pc;i++){
+          var ang = (Math.PI*2/pc)*i + Math.random()*0.4;
+          particles.push({ ang:ang, speed: 18+Math.random()*22, r: 0.6+Math.random()*1 });
+        }
+      }
+      ripples.push({ x:x, y:y, t:0, particles:particles });
+    }
+    function onPointer(e){
+      var pt = e.touches ? e.touches[0] : e;
+      if(!pt) return;
+      spawnRipple(pt.clientX, pt.clientY);
+    }
+    window.addEventListener('pointerdown', onPointer, { passive:true });
+
     resize();
     window.addEventListener('resize', resize, { passive:true });
 
-    for(var i=0; i<maxStars; i++){
-      stars.push({
-        x: Math.random()*width,
-        y: Math.random()*height,
-        r: Math.random()*1.2 + 0.3,
-        alpha: Math.random(),
-        speed: Math.random()*0.008 + 0.002,
-        dir: Math.random() > 0.5 ? 1 : -1
+    var visible = true;
+    document.addEventListener('visibilitychange', function(){ visible = !document.hidden; });
+
+    var last = performance.now();
+    var mx = 0.5, my = 0.5;
+    if(canHover){
+      window.addEventListener('mousemove', function(e){
+        mx = e.clientX/width; my = e.clientY/height;
+      }, { passive:true });
+    }
+
+    function drawStars(dt, scrollY){
+      layers.forEach(function(layer){
+        var parX = canHover ? (mx-0.5) * 14 * layer.depth : 0;
+        var parY = canHover ? (my-0.5) * 10 * layer.depth : 0;
+        layer.stars.forEach(function(s){
+          if(!reduceMotion) s.phase += dt * s.twinkleSpeed * 0.001;
+          var alpha = s.baseAlpha * (0.6 + 0.4*Math.sin(s.phase));
+          var sx = s.x*width + parX, sy = s.y*height + parY;
+
+          // ripple displacement
+          for(var i=0;i<ripples.length;i++){
+            var rp = ripples[i];
+            var dx = sx-rp.x, dy = sy-rp.y;
+            var dist = Math.sqrt(dx*dx+dy*dy) || 0.001;
+            var radius = rp.t*260;
+            var band = 70;
+            var influence = Math.max(0, 1 - Math.abs(dist-radius)/band) * Math.max(0,1-rp.t/1.1);
+            if(influence > 0){
+              var push = influence * 10;
+              sx += (dx/dist) * push;
+              sy += (dy/dist) * push;
+              alpha = Math.min(1, alpha + influence*0.5);
+            }
+          }
+          ctx.beginPath();
+          ctx.arc(sx, sy, s.r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(201,214,255,'+alpha.toFixed(3)+')';
+          ctx.fill();
+        });
+      });
+      // dust
+      dust.forEach(function(dt2){
+        var g = ctx.createRadialGradient(dt2.x*width, dt2.y*height, 0, dt2.x*width, dt2.y*height, dt2.r);
+        g.addColorStop(0, 'rgba(150,170,255,'+dt2.a+')');
+        g.addColorStop(1, 'rgba(150,170,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(dt2.x*width-dt2.r, dt2.y*height-dt2.r, dt2.r*2, dt2.r*2);
       });
     }
 
-    var lastTime = 0;
-    function draw(now){
-      if(now - lastTime < 33){ requestAnimationFrame(draw); return; } // ~30fps cap
-      lastTime = now;
+    function drawPlanet(p, now, scrollY){
+      var worldY = p.yFrac * docHeight;
+      var bobX = Math.cos(now*p.orbitSpeed + p.orbitPhase) * p.orbitR;
+      var bobY = Math.sin(now*p.orbitSpeed*1.3 + p.orbitPhase) * (p.orbitR*0.5);
+      var sx = p.xFrac*width + bobX;
+      var sy = (worldY - scrollY) + bobY;
+      if(sy < -120 || sy > height+120) return; // offscreen cull
+
+      var r = p.baseR;
+      var op = 0.4 + p.depth*0.5;
+      if(!reduceMotion) p.rot += p.rotSpeed * 16;
+
+      ctx.save();
+      ctx.globalAlpha = op;
+      // atmosphere rim glow
+      var glow = ctx.createRadialGradient(sx, sy, r*0.85, sx, sy, r*1.35);
+      glow.addColorStop(0, p.pal.rim);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(sx, sy, r*1.35, 0, Math.PI*2); ctx.fill();
+
+      // sphere body with directional shading (simulated sunlight from upper-left)
+      var lightAng = Math.PI*1.25 + Math.sin(p.rot)*0.15;
+      var lx = sx + Math.cos(lightAng)*r*0.55;
+      var ly = sy + Math.sin(lightAng)*r*0.55;
+      var body = ctx.createRadialGradient(lx, ly, r*0.1, sx, sy, r*1.05);
+      body.addColorStop(0, p.pal.base);
+      body.addColorStop(0.55, p.pal.base);
+      body.addColorStop(1, p.pal.shade);
+      ctx.fillStyle = body;
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.fill();
+
+      // terminator band (subtle self-rotation cue)
+      ctx.save();
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.clip();
+      var band = ctx.createLinearGradient(sx-r, sy, sx+r, sy);
+      var bandPos = 0.5 + Math.sin(p.rot)*0.3;
+      band.addColorStop(Math.max(0,bandPos-0.35), 'rgba(0,0,0,0)');
+      band.addColorStop(Math.min(1,bandPos+0.05), 'rgba(0,0,0,0.35)');
+      band.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = band;
+      ctx.fillRect(sx-r, sy-r, r*2, r*2);
+      ctx.restore();
+
+      // moons
+      p.moons.forEach(function(m){
+        if(!reduceMotion) m.phase += m.speed*16;
+        var mx2 = sx + Math.cos(m.phase)*m.dist;
+        var my2 = sy + Math.sin(m.phase)*m.dist*0.4;
+        ctx.globalAlpha = op*0.9;
+        ctx.beginPath(); ctx.arc(mx2, my2, m.r, 0, Math.PI*2);
+        ctx.fillStyle = '#c9d6ff';
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawRipples(dt){
+      for(var i=ripples.length-1; i>=0; i--){
+        var rp = ripples[i];
+        rp.t += dt*0.0016;
+        if(rp.t > 1.1){ ripples.splice(i,1); continue; }
+        var radius = rp.t*260;
+        var fade = Math.max(0, 1-rp.t/1.1);
+        // soft light pulse
+        var pulse = ctx.createRadialGradient(rp.x, rp.y, 0, rp.x, rp.y, radius*0.5);
+        pulse.addColorStop(0, 'rgba(0,240,255,'+(fade*0.12)+')');
+        pulse.addColorStop(1, 'rgba(0,240,255,0)');
+        ctx.fillStyle = pulse;
+        ctx.beginPath(); ctx.arc(rp.x, rp.y, radius*0.5, 0, Math.PI*2); ctx.fill();
+        // ripple ring
+        ctx.beginPath();
+        ctx.arc(rp.x, rp.y, radius, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(0,240,255,'+(fade*0.35)+')';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // particles
+        rp.particles.forEach(function(pt){
+          var dist = pt.speed * rp.t * 60;
+          var px = rp.x + Math.cos(pt.ang)*dist;
+          var py = rp.y + Math.sin(pt.ang)*dist;
+          ctx.beginPath();
+          ctx.arc(px, py, pt.r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(200,225,255,'+(fade*0.6)+')';
+          ctx.fill();
+        });
+      }
+    }
+
+    function frame(now){
+      if(!visible){ requestAnimationFrame(frame); return; }
+      var dt = Math.min(50, now-last);
+      last = now;
+      var scrollY = window.scrollY || window.pageYOffset || 0;
       ctx.clearRect(0,0,width,height);
-      for(var i=0; i<stars.length; i++){
-        var s = stars[i];
-        s.alpha += s.speed * s.dir;
-        if(s.alpha >= 1 || s.alpha <= 0.2) s.dir *= -1;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(201,214,255,' + s.alpha + ')';
-        ctx.fill();
-      }
-      requestAnimationFrame(draw);
+      drawStars(dt, scrollY);
+      planets.forEach(function(p){ drawPlanet(p, now, scrollY); });
+      drawRipples(dt);
+      requestAnimationFrame(frame);
     }
-    if(!reduceMotion) requestAnimationFrame(draw);
-    else {
-      // Static stars for reduced motion
-      for(var i=0; i<stars.length; i++){
-        var s = stars[i];
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(201,214,255,' + s.alpha + ')';
-        ctx.fill();
-      }
+
+    if(reduceMotion){
+      // Single static render, no continuous rAF loop
+      var scrollY0 = window.scrollY || 0;
+      drawStars(0, scrollY0);
+      planets.forEach(function(p){ drawPlanet(p, 0, scrollY0); });
+      window.addEventListener('scroll', function(){
+        ctx.clearRect(0,0,width,height);
+        drawStars(0, window.scrollY||0);
+        planets.forEach(function(p){ drawPlanet(p, 0, window.scrollY||0); });
+      }, { passive:true });
+    } else {
+      requestAnimationFrame(frame);
     }
+  })();
+
+  /* ---------- Logo touch feedback (gravitational pulse on tap) ---------- */
+  (function initLogoTouch(){
+    var logo = document.getElementById('brandLogo');
+    if(!logo) return;
+    logo.addEventListener('pointerdown', function(){
+      logo.classList.add('bh-touched');
+      setTimeout(function(){ logo.classList.remove('bh-touched'); }, 500);
+    }, { passive:true });
   })();
 
   /* ---------- Build hero name ---------- */
